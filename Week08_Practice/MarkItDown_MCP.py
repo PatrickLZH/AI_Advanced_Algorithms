@@ -255,7 +255,7 @@ class ContextProcessor:
 def convert_pdf_to_markdown_mcp():
     # 执行PDF到Markdown的转换流程
     print("2 PDF到Markdown转换流程")
-    
+
     # 初始化处理器
     processor = ContextProcessor(mcp_context)
     
