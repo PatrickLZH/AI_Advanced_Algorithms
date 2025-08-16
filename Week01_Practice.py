@@ -59,76 +59,76 @@ consumption_level_embed = np.stack(df['consumption_level'].map(words_embed).valu
 age_embed = np.expand_dims(df['age'].values, axis=1)
 recent_active_days_embed = np.expand_dims(df['recent_active_days'].values, axis=1)
 
-X = np.concat([sex_embed,city_embed,consumption_level_embed,age_embed,recent_active_days_embed], axis=1)
+X = np.concatenate([sex_embed,city_embed,consumption_level_embed,age_embed,recent_active_days_embed], axis=1)
 
 scaler = StandardScaler()
 X_std = scaler.fit_transform(X)
 
 # ************************************
-kmeans = KMeans(n_clusters=9)
-kmeans.fit(X_std)
-df['kmeans'] = kmeans.labels_.tolist()
+# kmeans = KMeans(n_clusters=9)
+# kmeans.fit(X_std)
+# df['kmeans'] = kmeans.labels_.tolist()
 
-# --- 3. PCA三维降维 ---
-CAT_COLS = ["sex", "city", "consumption_level"]
-NUM_COLS = ["age", "recent_active_days"]
-COLOR_COL = ["kmeans"]
+# # --- 3. PCA三维降维 ---
+# CAT_COLS = ["sex", "city", "consumption_level"]
+# NUM_COLS = ["age", "recent_active_days"]
+# COLOR_COL = ["kmeans"]
 
-pca = PCA(n_components=3)
-user_3d = pca.fit_transform(X_std)
-exp_var_3d = pca.explained_variance_ratio_
-print(f"\n--- PCA降至3维 ---")
-for i, var in enumerate(exp_var_3d, 1):
-    print(f"主成分{i}解释的方差：{var:.2%}")
-print(f"累计解释的方差：{np.sum(exp_var_3d):.2%}")
+# pca = PCA(n_components=3)
+# user_3d = pca.fit_transform(X_std)
+# exp_var_3d = pca.explained_variance_ratio_
+# print(f"\n--- PCA降至3维 ---")
+# for i, var in enumerate(exp_var_3d, 1):
+#     print(f"主成分{i}解释的方差：{var:.2%}")
+# print(f"累计解释的方差：{np.sum(exp_var_3d):.2%}")
 
-# --- 4. 3D静态可视化（Matplotlib） ---
-plt.rcParams['font.sans-serif'] = ['Arial Unicode MS', 'Heiti TC', 'SimHei', 'Microsoft YaHei']
-plt.rcParams['axes.unicode_minus'] = False
-def plot_3d_matplotlib(X_3d, df, exp_var, color_cols, n_label=20):
-    for color_col in color_cols:
-        fig = plt.figure(figsize=(12, 9))
-        ax = fig.add_subplot(111, projection='3d')
-        color_map = {
-            k: c for k, c in zip(sorted(df[color_col].unique()), plt.cm.tab10.colors)
-        }
-        colors = df[color_col].map(color_map)
-        ax.scatter(X_3d[:, 0], X_3d[:, 1], X_3d[:, 2], c=colors, alpha=0.5, s=40)
-        # 随机点标签
-        idxs = random.sample(range(len(df)), min(n_label, len(df)))
-        for i in idxs:
-            label = "-".join(str(df.loc[i, col]) for col in CAT_COLS + NUM_COLS)
-            ax.text(X_3d[i, 0], X_3d[i, 1], X_3d[i, 2], label, fontsize=7, alpha=0.7)
-        # 图例
-        for level, color in color_map.items():
-            ax.scatter([], [], [], color=color, label=level)
-        ax.set_title("用户画像PCA三维可视化", fontsize=15)
-        ax.set_xlabel(f"主成分1 ({exp_var[0]:.1%})")
-        ax.set_ylabel(f"主成分2 ({exp_var[1]:.1%})")
-        ax.set_zlabel(f"主成分3 ({exp_var[2]:.1%})")
-        ax.legend(title=color_col)
-        plt.tight_layout()
-        plt.show()
+# # --- 4. 3D静态可视化（Matplotlib） ---
+# plt.rcParams['font.sans-serif'] = ['Arial Unicode MS', 'Heiti TC', 'SimHei', 'Microsoft YaHei']
+# plt.rcParams['axes.unicode_minus'] = False
+# def plot_3d_matplotlib(X_3d, df, exp_var, color_cols, n_label=20):
+#     for color_col in color_cols:
+#         fig = plt.figure(figsize=(12, 9))
+#         ax = fig.add_subplot(111, projection='3d')
+#         color_map = {
+#             k: c for k, c in zip(sorted(df[color_col].unique()), plt.cm.tab10.colors)
+#         }
+#         colors = df[color_col].map(color_map)
+#         ax.scatter(X_3d[:, 0], X_3d[:, 1], X_3d[:, 2], c=colors, alpha=0.5, s=40)
+#         # 随机点标签
+#         idxs = random.sample(range(len(df)), min(n_label, len(df)))
+#         for i in idxs:
+#             label = "-".join(str(df.loc[i, col]) for col in CAT_COLS + NUM_COLS)
+#             ax.text(X_3d[i, 0], X_3d[i, 1], X_3d[i, 2], label, fontsize=7, alpha=0.7)
+#         # 图例
+#         for level, color in color_map.items():
+#             ax.scatter([], [], [], color=color, label=level)
+#         ax.set_title("用户画像PCA三维可视化", fontsize=15)
+#         ax.set_xlabel(f"主成分1 ({exp_var[0]:.1%})")
+#         ax.set_ylabel(f"主成分2 ({exp_var[1]:.1%})")
+#         ax.set_zlabel(f"主成分3 ({exp_var[2]:.1%})")
+#         ax.legend(title=color_col)
+#         plt.tight_layout()
+#         plt.show()
 
-plot_3d_matplotlib(user_3d, df, exp_var_3d, COLOR_COL, n_label=20)
+# plot_3d_matplotlib(user_3d, df, exp_var_3d, COLOR_COL, n_label=20)
 
 # ************************************
-# pca = PCA(n_components=2)
-# X_std_pca = pca.fit_transform(X_std)
-# df['embed_pca'] = X_std_pca.tolist()
+pca = PCA(n_components=2)
+X_std_pca = pca.fit_transform(X_std)
+df['embed_pca'] = X_std_pca.tolist()
 
-# df[['pca1', 'pca2']] = pd.DataFrame(df['embed_pca'].tolist(), index=df.index)
+df[['pca1', 'pca2']] = pd.DataFrame(df['embed_pca'].tolist(), index=df.index)
 
-# # 设置 matplotlib 字体为 SimHei 显示中文
-# plt.rcParams['font.sans-serif'] = ['SimHei']  # 用黑体显示中文
-# plt.rcParams['axes.unicode_minus'] = False    # 正常显示负号
+# 设置 matplotlib 字体为 SimHei 显示中文
+plt.rcParams['font.sans-serif'] = ['SimHei']  # 用黑体显示中文
+plt.rcParams['axes.unicode_minus'] = False    # 正常显示负号
 
-# for var in ['sex', 'city', 'consumption_level']:
-#     plt.figure(figsize=(10, 6))
-#     sns.scatterplot(data=df, x='pca1', y='pca2', hue=var, palette='Set2', alpha=0.8)
-#     plt.title(f'User Embedding Visualization with PCA ({var})')
-#     plt.xlabel('PCA Component 1')
-#     plt.ylabel('PCA Component 2')
-#     plt.grid(True)
-#     plt.tight_layout()
-#     plt.show()
+for var in ['sex', 'city', 'consumption_level']:
+    plt.figure(figsize=(10, 6))
+    sns.scatterplot(data=df, x='pca1', y='pca2', hue=var, palette='Set2', alpha=0.8)
+    plt.title(f'User Embedding Visualization with PCA ({var})')
+    plt.xlabel('PCA Component 1')
+    plt.ylabel('PCA Component 2')
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()

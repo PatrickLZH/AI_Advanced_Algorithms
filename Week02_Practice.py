@@ -42,33 +42,33 @@ rst = clf.predict(test_embeddings)
 print(test_texts)
 print(rst)
 
-# # 4. 获取权重
-# weights = clf.coef_.flatten()
-# top_k = 10
-# top_indices = np.argsort(np.abs(weights))[-top_k:][::-1]
+# 4. 获取权重
+weights = clf.coef_.flatten()
+top_k = 10
+top_indices = np.argsort(np.abs(weights))[-top_k:][::-1]
 
-# print(top_indices)
-# print(weights[top_indices])
+print(top_indices)
+print(weights[top_indices])
 
-# dimensions_filter = [f'dim{i}' for i in top_indices]
-# weights_filter = weights[top_indices]
+dimensions_filter = [f'dim{i}' for i in top_indices]
+weights_filter = weights[top_indices]
 
-# # 创建条形图
-# fig, ax = plt.subplots()
-# # 绘制条形图
-# bars = ax.bar(dimensions_filter, weights_filter, color='blue')
-# # 添加标题和轴标签
-# ax.set_title('Top-10 Embedding Dimensions for Sentiment Classification')
-# ax.set_xlabel('Dimension')
-# ax.set_ylabel('Weight')
-# # 画上网格
-# ax.grid(True, linestyle='--', alpha=0.5)  # linestyle 控制网格线样式，alpha 控制透明度
-# # 在条形上添加权重值
-# for bar in bars:
-#     yval = bar.get_height()
-#     ax.text(bar.get_x() + bar.get_width()/2, yval, f'+{abs(yval):.2f}' if yval >= 0 else f'{yval:.2f}', 
-#             ha='center', va='bottom' if yval > 0 else 'top')
-# # 旋转 X 轴标签
-# plt.xticks(rotation=45)
-# # 显示图形
-# plt.show()
+# 创建条形图
+fig, ax = plt.subplots()
+# 绘制条形图
+bars = ax.bar(dimensions_filter, weights_filter, color='blue')
+# 添加标题和轴标签
+ax.set_title('Top-10 Embedding Dimensions for Sentiment Classification')
+ax.set_xlabel('Dimension')
+ax.set_ylabel('Weight')
+# 画上网格
+ax.grid(True, linestyle='--', alpha=0.5)  # linestyle 控制网格线样式，alpha 控制透明度
+# 在条形上添加权重值
+for bar in bars:
+    yval = bar.get_height()
+    ax.text(bar.get_x() + bar.get_width()/2, yval, f'+{abs(yval):.2f}' if yval >= 0 else f'{yval:.2f}', 
+            ha='center', va='bottom' if yval > 0 else 'top')
+# 旋转 X 轴标签
+plt.xticks(rotation=45)
+# 显示图形
+plt.show()
