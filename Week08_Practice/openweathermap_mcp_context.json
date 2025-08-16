@@ -1,0 +1,99 @@
+{
+  "resources": {
+    "openweathermap_api": {
+      "uri": "http://api.openweathermap.org/data/2.5/weather",
+      "type": "api",
+      "name": "openweathermap_api",
+      "description": "OpenWeatherMap天气API，用于获取实时天气信息",
+      "metadata": {
+        "api_key_required": true,
+        "endpoint": "weather",
+        "docs": "https://openweathermap.org/api",
+        "rate_limit": "60 calls/minute (free tier)"
+      }
+    },
+    "json_context_file": {
+      "uri": "file://./openweathermap_mcp_context.json",
+      "type": "file",
+      "name": "json_context_file",
+      "description": "包含MCP上下文信息的JSON文件，用于转换为Markdown格式",
+      "metadata": {
+        "file_type": "JSON",
+        "purpose": "MCP上下文数据",
+        "target_format": "Markdown"
+      }
+    }
+  },
+  "tools": {
+    "openweathermap_query": {
+      "name": "openweathermap_query",
+      "description": "使用OpenWeatherMap查询实时天气信息的工具",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "city": {
+            "type": "string",
+            "description": "城市名称"
+          },
+          "api_key": {
+            "type": "string",
+            "description": "OpenWeatherMap API的访问密钥"
+          }
+        }
+      },
+      "required": [
+        "city",
+        "api_key"
+      ]
+    },
+    "json_to_markdown_converter": {
+      "name": "json_to_markdown_converter",
+      "description": "将JSON格式的MCP上下文数据转换为Markdown格式报告的工具",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "input_file": {
+            "type": "string",
+            "description": "输入的JSON文件路径"
+          },
+          "output_file": {
+            "type": "string",
+            "description": "输出的Markdown文件路径"
+          }
+        }
+      },
+      "required": [
+        "input_file",
+        "output_file"
+      ]
+    }
+  },
+  "prompts": {
+    "openweathermap_weather_query": {
+      "name": "openweathermap_weather_query",
+      "content": "\n    使用OpenWeatherMap API查询指定城市的实时天气信息：\n    城市: {city}\n    \n    请使用OpenWeatherMap API获取并格式化天气信息。\n    ",
+      "role": "user",
+      "resources": [
+        "openweathermap_api"
+      ]
+    },
+    "markdown_conversion_prompt": {
+      "name": "markdown_conversion_prompt",
+      "content": "\n    请将指定的JSON格式MCP上下文文件转换为结构化的Markdown报告。\n    输入文件: {input_file}\n    输出文件: {output_file}\n    \n    Markdown报告应包含以下部分：\n    1. 标题和生成时间\n    2. 资源列表（以表格形式展示）\n    3. 工具列表（以表格形式展示）\n    4. 提示列表（显示每个提示的详细内容）\n    5. 历史记录（以表格形式展示）\n    \n    请确保输出格式清晰、易读。\n    ",
+      "role": "user",
+      "resources": [
+        "json_context_file"
+      ]
+    }
+  },
+  "history": [
+    {
+      "request_type": "get_weather",
+      "parameters": {
+        "city": "Shanghai",
+        "api_key": "3c9562a7784e427bb1f1c0f8da38137a"
+      },
+      "timestamp": "2025-08-16T10:19:09.001696"
+    }
+  ]
+}
