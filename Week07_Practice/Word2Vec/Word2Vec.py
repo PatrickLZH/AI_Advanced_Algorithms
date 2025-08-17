@@ -48,5 +48,6 @@ model = word2vec.Word2Vec(
 )
 # model.save('Word2Vec.model')
 # model = word2vec.Word2Vec.load('word2Vec.model')
-print(model.wv.similarity('刘备', '刘玄德'))
-print(model.wv.most_similar(positive=['刘禅', '司马懿'], negative=['刘备'])[0][0])
+print(model.wv.similarity('曹操', '吴国太'))
+print(model.wv.similarity('司马师', '司马懿'))
+print(model.wv.most_similar(positive=['刘禅', '司马懿'], negative=['刘备'])[0])
