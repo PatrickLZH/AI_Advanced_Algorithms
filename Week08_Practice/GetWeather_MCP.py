@@ -298,7 +298,7 @@ def execute_mcp_workflow():
     # 4. 显示上下文历史
     print("4 上下文历史记录:")
     for i, history in enumerate(mcp_context.context_history, 1):
-        print(f"   {i}. {history['request_type']} - {history['timestamp']}")
+        print(f"{i}) {history['request_type']} - {history['timestamp']}")
 
 # 执行完整流程
 if __name__ == "__main__":
