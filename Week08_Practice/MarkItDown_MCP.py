@@ -86,7 +86,7 @@ mcp_context = MCPContext()
 
 # 定义PDF文件资源
 pdf_resource = Resource(
-    uri="file://./three_kingdoms.pdf",
+    uri="file:///*.pdf",
     type=ResourceType.FILE,
     name="pdf_file",
     description="需要转换为Markdown格式的PDF文件",
@@ -197,20 +197,23 @@ class ContextProcessor:
             # 参考 https://github.com/microsoft/markitdown/tree/main/packages/markitdown-mcp
             markdown_content = self._call_markitdown_mcp_service(input_file)
             
-            # 确保返回的内容不是None
-            if markdown_content is None:
-                markdown_content = "# 转换失败\n\n无法从PDF生成Markdown内容。"
-            
-            # 保存Markdown文件
-            with open(output_file, "w", encoding="utf-8") as f:
-                f.write(markdown_content)
-            
-            return {
-                "result": "PDF到Markdown转换完成",
-                "resources_used": [r.name for r in resources_used],
-                "tools_used": [t.name for t in tools_used],
-                "output_file": output_file
-            }
+            if markdown_content: 
+                # 保存Markdown文件
+                with open(output_file, "w", encoding="utf-8") as f:
+                    f.write(markdown_content)
+                return {
+                    "result": "PDF到Markdown转换完成",
+                    "resources_used": [r.name for r in resources_used],
+                    "tools_used": [t.name for t in tools_used],
+                    "output_file": output_file
+                }
+            else:
+                return {
+                    "result": "PDF到Markdown转换失败",
+                    "resources_used": [r.name for r in resources_used],
+                    "tools_used": [t.name for t in tools_used],
+                    "error": "MarkItDown MCP服务返回空结果"
+                }
         except Exception as e:
             return {
                 "result": "PDF到Markdown转换失败",
@@ -225,28 +228,106 @@ class ContextProcessor:
         根据MarkItDown MCP的规范实现
         """
         try:
-            # 方法1: 尝试直接使用markitdown包（如果已安装）
-            try:
-                print("使用本地markitdown包进行转换...")
-                markitdown = MarkItDown()
-                result = markitdown.convert(input_file)
+            # # 方法1: 尝试直接使用markitdown包（如果已安装）
+            # try:
+            #     print("使用本地markitdown包进行转换...")
+            #     markitdown = MarkItDown()
+            #     result = markitdown.convert(input_file)
                 
-                # 检查返回结果的属性
-                if hasattr(result, 'text'):
-                    return result.text
-                elif hasattr(result, 'markdown'):
-                    return result.markdown
+            #     # 检查返回结果的属性
+            #     if hasattr(result, 'text'):
+            #         return result.text
+            #     elif hasattr(result, 'markdown'):
+            #         return result.markdown
+            #     else:
+            #         # 如果没有预期的属性，尝试转换为字符串
+            #         return str(result)
+            # except ImportError:
+            #     print("未找到markitdown包")
+            # except Exception as e:
+            #     print(f"使用markitdown包时出错: {e}")
+
+            # 方法2: 尝试使用HTTP进行转换
+            try:
+                print("尝试使用HTTP服务进行转换...")
+                # 获取文件名
+                file_name = os.path.abspath(input_file)
+                print(f"文件名: {file_name}")
+                # 使用MCP Inspector中显示的URL
+                url = "http://localhost:3001/mcp"
+                # 构造符合MCP规范的完整请求（基于MCP Inspector的示例）
+                payload = {
+                    "jsonrpc": "2.0",  # 添加必需的jsonrpc字段
+                    "id": "1",  # 添加必需的id字段
+                    "method": "tools/call",
+                    "params": {
+                        "name": "convert_to_markdown",
+                        "arguments": {
+                            "uri": f"file:///{file_name}"
+                        },
+                        "_meta": {
+                            "progressToken": 0
+                        }
+                    }
+                }               
+                # 设置正确的请求头
+                headers = {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json, text/event-stream"
+                }
+                # 发送POST请求
+                print("发送HTTP请求...")
+                response = requests.post(url=url, json=payload, headers=headers)
+                # 检查响应状态
+                if response.status_code == 200:
+                    json_response = response.json()                   
+                    # 处理MCP响应格式
+                    if 'result' in json_response:
+                        result = json_response['result']
+                        # 根据提供的响应格式提取文本内容
+                        if 'content' in result and len(result['content']) > 0:
+                            content_items = result['content']
+                            # 合并所有文本内容
+                            markdown_text = ""
+                            for item in content_items:
+                                if item.get('type') == 'text' and 'text' in item:
+                                    markdown_text += item['text']  # 显示前100个字符
+                            print(f"成功提取到{len(content_items)}个文本片段")
+                            return markdown_text
+                        else:
+                            # 如果没有content字段，尝试其他可能的字段
+                            text_content = result.get('text', str(result))
+                            return text_content
+                    else:
+                        # 如果响应不是标准JSON-RPC格式，尝试直接解析
+                        if 'content' in json_response and len(json_response['content']) > 0:
+                            content_items = json_response['content']
+                            # 合并所有文本内容
+                            markdown_text = ""
+                            for item in content_items:
+                                if item.get('type') == 'text' and 'text' in item:
+                                    markdown_text += item['text']
+                            print(f"成功提取到{len(content_items)}个文本片段")
+                            return markdown_text
+                        else:
+                            text_content = json_response.get('text', str(json_response))
+                            return text_content           
                 else:
-                    # 如果没有预期的属性，尝试转换为字符串
-                    return str(result)
-            except ImportError:
-                print("未找到markitdown包")
+                    # 打印完整的错误信息
+                    error_message = f"HTTP服务错误: {response.status_code} - {response.text}"
+                    print(error_message)
+                    return error_message       
+            except requests.exceptions.ConnectionError as e:
+                print(f"连接错误: {e}")
+                print("请检查MCP服务是否正在运行，并且端口3001是否可访问")
+            except requests.exceptions.Timeout as e:
+                print(f"超时错误: {e}")
+            except requests.exceptions.RequestException as e:
+                print(f"请求异常: {e}")
             except Exception as e:
-                print(f"使用markitdown包时出错: {e}")
+                print(f"未预期的异常: {e}")
         except Exception as e:
             print(f"调用MarkItDown MCP服务时出错: {str(e)}")
-            # 即使出现异常，也返回一个默认内容而不是None
-            return f"PDF转换错误，转换过程中出现错误: {str(e)}，源文件: {input_file}"
     
     def _get_timestamp(self) -> str:
         """获取时间戳"""
